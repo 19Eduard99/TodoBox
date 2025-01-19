@@ -1,24 +1,20 @@
-import { Component } from "react";
+import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import Swal from "sweetalert2";
 import Item from "./Item";
 
-class TodoBox extends Component {
-  state = {
-    todo: { text: "", id: "" },
-    todos: [],
+const TodoBox = () => {
+  const [state, setState] = useState({ text: "", id: "" });
+  const [todos, setTodos] = useState([]);
+
+  const inputHandler = (e) => {
+    setState({ text: e.target.value, id: uuidv4() });
   };
 
-  handleChange = (e) => {
-    this.setState(() => ({
-      todo: { text: e.target.value, id: uuidv4() },
-    }));
-  };
-
-  handleSubmit = (e) => {
+  const submitHandler = (e) => {
     e.preventDefault();
 
-    if (!this.state.todo.text.trim()) {
+    if (!state.text.trim()) {
       Swal.fire({
         title: "Ошибка!",
         text: "Поле не может быть пустым!",
@@ -28,13 +24,12 @@ class TodoBox extends Component {
       return;
     }
 
-    this.setState((prevState) => ({
-      todo: { text: "", id: "" },
-      todos: [prevState.todo, ...prevState.todos],
-    }));
+    setTodos([...todos, state]);
+
+    setState({ text: "", id: "" });
   };
 
-  removeTodo = (id) => () => {
+  const removeTodo = (id) => () => {
     Swal.fire({
       title: "Вы уверены?",
       text: "Вы не сможете отменить это действие!",
@@ -46,9 +41,7 @@ class TodoBox extends Component {
       cancelButtonText: "Отмена",
     }).then((result) => {
       if (result.isConfirmed) {
-        this.setState((prevState) => ({
-          todos: prevState.todos.filter((todo) => todo.id !== id),
-        }));
+        setTodos(todos.filter((todo) => todo.id !== id));
         Swal.fire({
           title: "Удалено!",
           text: "Задача была успешно удалена.",
@@ -58,33 +51,31 @@ class TodoBox extends Component {
     });
   };
 
-  render() {
-    const { text } = this.state.todo;
-
-    return (
-      <div>
-        <div className="mb-3">
-          <form onSubmit={this.handleSubmit} className="d-flex">
-            <div className="w-100 me-3">
-              <input
-                type="text"
-                onChange={this.handleChange}
-                value={text || ""}
-                required=""
-                className="form-control"
-                placeholder="I am going..."
-              />
-            </div>
-            <button className="btn btn-primary">add</button>
-          </form>
-        </div>
-
-        {this.state.todos.map((todo) => (
-          <Item key={todo.id} task={todo} onRemove={this.removeTodo(todo.id)} />
-        ))}
+  return (
+    <div>
+      <div className="mb-3">
+        <form className="d-flex" onSubmit={submitHandler}>
+          <div className="w-100 me-3">
+            <input
+              type="text"
+              onChange={inputHandler}
+              value={state.text}
+              required=""
+              className="form-control"
+              placeholder="I am going..."
+            />
+          </div>
+          <button type="submit" className="btn btn-primary">
+            add
+          </button>
+        </form>
       </div>
-    );
-  }
-}
+
+      {todos.map((todo) => (
+        <Item key={todo.id} task={todo} onRemove={removeTodo(todo.id)} />
+      ))}
+    </div>
+  );
+};
 
 export default TodoBox;
